@@ -16,7 +16,7 @@ Enjoy!
 
 You can configure target list by adding this to your `settings.json`
 
-Choosing `system` will remove `rust.target` from setting, which in consequence sets your target to your current host system.
+Choosing `system` will remove a specified setting, which in consequence sets your target to your current host system.
 
 ```json
 "rust-analyzer-targets.targets": [
