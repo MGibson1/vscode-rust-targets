@@ -4,6 +4,9 @@ All notable changes to the "rust-analyzer-targets" extension will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [Unreleased]
+
+
 ## [1.1.2]
 
 ### Changed
