@@ -4,12 +4,14 @@ All notable changes to the "rust-analyzer-targets" extension will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [1.1.2]
 
 ### Changed
 
 - Settings updates are now stored to the workspace rather than global configuration
     - This is to better support immutable configurations
+- Updated vscode version to 1.86
+- Forked from PolyMeilex
 
 ### Removed
 
