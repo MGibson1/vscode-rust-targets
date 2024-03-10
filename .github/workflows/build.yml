@@ -1,0 +1,78 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+    inputs: {}
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-22.04
+    outputs:
+      package_version: ${{ steps.retrieve-package-version.outputs.package_version }}
+      node_version: ${{ steps.retrieve-node-version.outputs.node_version }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Get Package Version
+        id: retrieve-package-version
+        run: |
+          PKG_VERSION=$(jq -r .version package.json)
+          echo "package_version=$PKG_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get Node Version
+        id: retrieve-node-version
+        working-directory: ./
+        run: |
+          NODE_NVMRC=$(cat .nvmrc)
+          NODE_VERSION=${NODE_NVMRC/v/''}
+          echo "node_version=$NODE_VERSION" >> $GITHUB_OUTPUT
+
+  package:
+    name: Package
+    runs-on: ubuntu-22.04
+    needs:
+      - setup
+    env:
+      _PACKAGE_VERSION: ${{ needs.setup.outputs.package_version }}
+      _NODE_VERSION: ${{ needs.setup.outputs.node_version }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Node
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+          node-version: ${{ env._NODE_VERSION }}
+
+      - name: Install
+        run: npm ci
+        working-directory: ./
+
+      - name: Build & Package
+        run: npm run package
+
+      - name: Create checksum
+        run: |
+          shasum -a 256 rust-analyzer-target-${{ env._PACKAGE_VERSION }}.vsix \
+            | awk '{split($0, a); print a[1]}' > rust-analyzer-target-${{ env._PACKAGE_VERSION }}-sha256.txt
+
+      - name: Upload asset
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: rust-analyzer-target-${{ env._PACKAGE_VERSION }}.vsix
+          path: ./rust-analyzer-target-${{ env._PACKAGE_VERSION }}.vsix
+          if-no-files-found: error
+
+      - name: Upload unix checksum asset
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: rust-analyzer-target-${{ env._PACKAGE_VERSION }}-sha256.txt
+          path: ./rust-analyzer-target-${{ env._PACKAGE_VERSION }}-sha256.txt
+          if-no-files-found: error
